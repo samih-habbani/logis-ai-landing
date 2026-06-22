@@ -10,16 +10,14 @@ create table if not exists ai_program_registrations (
   parent_phone     text not null,
   area_of_residence text,
 
-  -- Primary child
-  child_full_name text not null,
-  child_dob       date not null,
-  child_grade     text,
-  child_school    text,
+  -- Children details as JSON array
+  -- Each item: { ageKey, full_name, dob, grade, school }
+  children jsonb not null default '[]',
 
-  -- Seats per age group
-  seats_6_9   int not null default 0 check (seats_6_9   >= 0),
-  seats_10_12 int not null default 0 check (seats_10_12 >= 0),
-  seats_12_14 int not null default 0 check (seats_12_14 >= 0),
+  -- Seats per age group (max 7 each)
+  seats_6_9   int not null default 0 check (seats_6_9   between 0 and 7),
+  seats_10_12 int not null default 0 check (seats_10_12 between 0 and 7),
+  seats_12_14 int not null default 0 check (seats_12_14 between 0 and 7),
 
   constraint at_least_one_seat check (seats_6_9 + seats_10_12 + seats_12_14 > 0)
 );
