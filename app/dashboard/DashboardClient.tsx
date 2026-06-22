@@ -16,25 +16,86 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+function csvCell(val: any) {
+  const s = val == null ? '' : String(val)
+  return `"${s.replace(/"/g, '""')}"`
+}
+
 function exportCSV(registrations: any[]) {
-  const rows = [
-    ['Date', 'Parent Name', 'Email', 'Phone', 'Area', 'Seats 6-9', 'Seats 10-12', 'Seats 12-14', 'Total Seats', 'Children'].join(','),
-    ...registrations.map((r) => [
-      formatDate(r.created_at),
-      `"${r.parent_full_name}"`,
-      r.parent_email,
-      r.parent_phone,
-      `"${r.area_of_residence || ''}"`,
-      r.seats_6_9,
-      r.seats_10_12,
-      r.seats_12_14,
-      r.seats_6_9 + r.seats_10_12 + r.seats_12_14,
-      `"${(r.children || []).map((c: any) => `${c.full_name} (${c.ageKey})`).join('; ')}"`,
-    ].join(',')),
+  const AGE_LABEL: Record<string, string> = {
+    '6_9': 'Ages 6–9',
+    '10_12': 'Ages 10–12',
+    '12_14': 'Ages 12–14',
+  }
+
+  const headers = [
+    'Registration Date',
+    'Parent Full Name',
+    'Parent Email',
+    'Parent Phone',
+    'Area of Residence',
+    'Total Seats',
+    'Seats Ages 6–9',
+    'Seats Ages 10–12',
+    'Seats Ages 12–14',
+    'Child #',
+    'Child Full Name',
+    'Child Age Group',
+    'Child Date of Birth',
+    'Child Grade',
+    'Child School',
   ]
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+
+  const rows: string[][] = [headers]
+
+  for (const r of registrations) {
+    const total = (r.seats_6_9 || 0) + (r.seats_10_12 || 0) + (r.seats_12_14 || 0)
+    const children: any[] = r.children || []
+
+    if (children.length === 0) {
+      rows.push([
+        formatDate(r.created_at),
+        r.parent_full_name || '',
+        r.parent_email || '',
+        r.parent_phone || '',
+        r.area_of_residence || '',
+        String(total),
+        String(r.seats_6_9 || 0),
+        String(r.seats_10_12 || 0),
+        String(r.seats_12_14 || 0),
+        '', '', '', '', '', '',
+      ])
+    } else {
+      children.forEach((c, i) => {
+        rows.push([
+          i === 0 ? formatDate(r.created_at) : '',
+          i === 0 ? r.parent_full_name || '' : '',
+          i === 0 ? r.parent_email || '' : '',
+          i === 0 ? r.parent_phone || '' : '',
+          i === 0 ? r.area_of_residence || '' : '',
+          i === 0 ? String(total) : '',
+          i === 0 ? String(r.seats_6_9 || 0) : '',
+          i === 0 ? String(r.seats_10_12 || 0) : '',
+          i === 0 ? String(r.seats_12_14 || 0) : '',
+          String(i + 1),
+          c.full_name || '',
+          AGE_LABEL[c.ageKey] || c.ageKey || '',
+          c.dob ? new Date(c.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+          c.grade || '',
+          c.school || '',
+        ])
+      })
+    }
+  }
+
+  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\r\n')
+  const bom = '﻿' // UTF-8 BOM so Excel opens Arabic/special chars correctly
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a'); a.href = url; a.download = 'registrations.csv'; a.click()
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `registrations_${new Date().toISOString().slice(0,10)}.csv`
+  a.click()
   URL.revokeObjectURL(url)
 }
 
