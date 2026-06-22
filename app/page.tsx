@@ -347,7 +347,7 @@ export default function GenerativeAILanding() {
             <span className="text-xs font-black tracking-[0.25em] uppercase text-blue-500 mb-4 block">Three Programs</span>
             <h2 className="text-4xl md:text-5xl font-black text-slate-800" style={{ fontFamily: "'Exo 2',sans-serif" }}>Choose Your <span style={{ color: '#5B7A00' }}>Level</span></h2>
           </motion.div>
-          <div className="space-y-4">{AGES.map((age, i) => <AgeCard key={age.range} age={age} index={i} />)}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">{AGES.map((age, i) => <AgeCard key={age.range} age={age} index={i} />)}</div>
         </div>
       </section>
 
