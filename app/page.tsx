@@ -270,18 +270,23 @@ export default function GenerativeAILanding() {
       `}</style>
 
       {/* Hero */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(160deg,#0B1F3A 0%,#0D3561 50%,#0B5394 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10" style={{ background: '#009CDE', filter: 'blur(80px)', transform: 'translate(30%,-30%)' }} />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-10" style={{ background: '#C4D600', filter: 'blur(60px)', transform: 'translate(-30%,30%)' }} />
-        {mounted && [...Array(6)].map((_, i) => <div key={i} className="absolute rounded-full float" style={{ width: 6, height: 6, background: '#009CDE', opacity: 0.3 + i * 0.07, left: (10 + i * 15) + '%', top: (20 + (i % 3) * 20) + '%', animationDelay: i * 0.8 + 's' }} />)}
-        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg,#009CDE,#C4D600,#A50050,#009CDE)' }} />
+      <section className="relative overflow-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        {/* Background image */}
+        <div className="absolute inset-0 z-0">
+          <Image src="/hero-bg.jpg" alt="" fill style={{ objectFit: 'cover', objectPosition: 'center top' }} priority quality={85} />
+        </div>
+        {/* Overlays */}
+        <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(160deg, rgba(11,31,58,0.92) 0%, rgba(13,53,97,0.85) 50%, rgba(11,83,148,0.80) 100%)' }} />
+        <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(to top, rgba(11,31,58,0.7) 0%, transparent 50%)' }} />
+        {mounted && [...Array(6)].map((_, i) => <div key={i} className="absolute rounded-full float z-10" style={{ width: 6, height: 6, background: '#009CDE', opacity: 0.3 + i * 0.07, left: (10 + i * 15) + '%', top: (20 + (i % 3) * 20) + '%', animationDelay: i * 0.8 + 's' }} />)}
+        <div className="absolute top-0 left-0 right-0 h-1 z-20" style={{ background: 'linear-gradient(90deg,#009CDE,#C4D600,#A50050,#009CDE)' }} />
 
         {/* Lang toggle */}
-        <div className="absolute top-6 end-6 z-20">
+        <div className="absolute top-6 end-6 z-30">
           <LangToggle lang={lang} setLang={setLang} />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-32 text-center">
+        <div className="relative z-20 max-w-5xl mx-auto px-6 py-32 text-center">
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-10 flex justify-center">
             <Image src="/logiscool-logo.svg" alt="Logiscool" width={200} height={44} priority />
           </motion.div>
@@ -321,7 +326,7 @@ export default function GenerativeAILanding() {
           </motion.div>
         </div>
 
-        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
+        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20" animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <div className="w-6 h-10 rounded-full border-2 flex items-start justify-center pt-2" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
             <div className="w-1 h-2 rounded-full" style={{ background: 'rgba(0,156,222,0.7)' }} />
           </div>
