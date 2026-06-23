@@ -254,7 +254,7 @@ function RegistrationForm({ tr }) {
 
 export default function GenerativeAILanding() {
   const [mounted, setMounted] = useState(false)
-  const [lang, setLang] = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>('ar')
   useEffect(() => setMounted(true), [])
 
   const tr = t[lang]
