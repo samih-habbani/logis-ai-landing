@@ -273,7 +273,7 @@ export default function GenerativeAILanding() {
       <section className="relative overflow-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         {/* Background image */}
         <div className="absolute inset-0 z-0">
-          <Image src="/hero-bg.jpg" alt="" fill style={{ objectFit: 'cover', objectPosition: 'center top' }} priority quality={85} />
+          <Image src="/hero-bg.webp" alt="" fill style={{ objectFit: 'cover', objectPosition: 'center top' }} priority quality={90} />
         </div>
         {/* Overlays */}
         <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(160deg, rgba(11,31,58,0.92) 0%, rgba(13,53,97,0.85) 50%, rgba(11,83,148,0.80) 100%)' }} />
