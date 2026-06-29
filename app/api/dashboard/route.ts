@@ -3,11 +3,12 @@ import { cookies } from 'next/headers'
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json()
-  if (password !== process.env.DASHBOARD_PASSWORD) {
+  const PASS = process.env.DASHBOARD_PASSWORD ?? 'LogeeSkoul2026!'
+  if (password !== PASS) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
   const cookieStore = await cookies()
-  cookieStore.set('dashboard_auth', process.env.DASHBOARD_PASSWORD!, {
+  cookieStore.set('dashboard_auth', PASS, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
