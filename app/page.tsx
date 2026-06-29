@@ -82,7 +82,29 @@ function AgeCard({ age, index, tr }) {
   )
 }
 
+const FULLY_BOOKED_GROUPS: string[] = ['seats_10_12']
+
 function SeatCounter({ group, value, onChange, tr }) {
+  const isFullyBooked = FULLY_BOOKED_GROUPS.includes(group.key)
+
+  if (isFullyBooked) {
+    return (
+      <div className="rounded-2xl p-5 border transition-all duration-300" style={{ background: '#f8fafc', borderColor: '#e2e8f0', opacity: 0.75 }}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#f1f5f9' }}>{group.icon}</div>
+          <div>
+            <span className="text-xs font-black tracking-[0.2em] uppercase block" style={{ color: '#94a3b8' }}>{tr.agesLabel} {group.range}</span>
+            <span className="text-sm font-bold text-slate-400">{group.title}</span>
+          </div>
+        </div>
+        <div className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold" style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          {tr.fullyBooked}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-2xl p-5 border transition-all duration-300" style={{ background: value > 0 ? group.bg : 'white', borderColor: value > 0 ? group.color + '40' : '#e2e8f0', boxShadow: value > 0 ? '0 4px 20px ' + group.color + '15' : '0 1px 4px rgba(0,0,0,0.05)' }}>
       <div className="flex items-center gap-3 mb-4">
@@ -221,6 +243,12 @@ function RegistrationForm({ tr }) {
               {tr.seatGroups.map((group) => <SeatCounter key={group.key} group={group} value={seats[group.key]} onChange={(n) => setSeats((s) => ({ ...s, [group.key]: n }))} tr={tr} />)}
             </div>
             {totalSeats > 0 && <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm font-bold text-blue-500">{tr.seatsSelected(totalSeats)}</motion.div>}
+            {FULLY_BOOKED_GROUPS.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex items-start gap-2.5 rounded-xl p-3.5 text-sm" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}>
+                <svg className="flex-shrink-0 mt-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>{tr.fullyBookedDisclaimer(tr.seatGroups.find(g => g.key === FULLY_BOOKED_GROUPS[0])?.title ?? '')}</span>
+              </motion.div>
+            )}
           </div>
 
           <AnimatePresence>
