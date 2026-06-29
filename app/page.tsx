@@ -82,10 +82,7 @@ function AgeCard({ age, index, tr }) {
   )
 }
 
-const FULLY_BOOKED_GROUPS: string[] = ['seats_10_12']
-
-function SeatCounter({ group, value, onChange, tr }) {
-  const isFullyBooked = FULLY_BOOKED_GROUPS.includes(group.key)
+function SeatCounter({ group, value, onChange, tr, isFullyBooked }) {
 
   if (isFullyBooked) {
     return (
@@ -166,6 +163,20 @@ function RegistrationForm({ tr }) {
   const [children, setChildren] = useState([])
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const [fullyBooked, setFullyBooked] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    fetch('/api/availability')
+      .then((r) => r.json())
+      .then((data) => {
+        setFullyBooked({
+          seats_6_9:   data.seats_6_9?.fullyBooked   ?? false,
+          seats_10_12: data.seats_10_12?.fullyBooked ?? false,
+          seats_12_14: data.seats_12_14?.fullyBooked ?? false,
+        })
+      })
+      .catch(() => {})
+  }, [])
   const ref = useRef(null)
   const inView = useInView(ref, { once: true })
   const totalSeats = seats.seats_6_9 + seats.seats_10_12 + seats.seats_12_14
@@ -240,13 +251,13 @@ function RegistrationForm({ tr }) {
             {divider(tr.divSeats)}
             <p className="text-xs text-slate-400 text-center mb-5">{tr.seatsNote(MAX_SEATS)}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {tr.seatGroups.map((group) => <SeatCounter key={group.key} group={group} value={seats[group.key]} onChange={(n) => setSeats((s) => ({ ...s, [group.key]: n }))} tr={tr} />)}
+              {tr.seatGroups.map((group) => <SeatCounter key={group.key} group={group} value={seats[group.key]} onChange={(n) => setSeats((s) => ({ ...s, [group.key]: n }))} tr={tr} isFullyBooked={fullyBooked[group.key] ?? false} />)}
             </div>
             {totalSeats > 0 && <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm font-bold text-blue-500">{tr.seatsSelected(totalSeats)}</motion.div>}
-            {FULLY_BOOKED_GROUPS.length > 0 && (
+            {Object.values(fullyBooked).some(Boolean) && (
               <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex items-start gap-2.5 rounded-xl p-3.5 text-sm" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}>
                 <svg className="flex-shrink-0 mt-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>{tr.fullyBookedDisclaimer(tr.seatGroups.find(g => g.key === FULLY_BOOKED_GROUPS[0])?.title ?? '')}</span>
+                <span>{tr.fullyBookedDisclaimer(tr.seatGroups.filter(g => fullyBooked[g.key]).map(g => g.title).join(', '))}</span>
               </motion.div>
             )}
           </div>
