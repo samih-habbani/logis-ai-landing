@@ -82,26 +82,7 @@ function AgeCard({ age, index, tr }) {
   )
 }
 
-function SeatCounter({ group, value, onChange, tr, isFullyBooked }) {
-
-  if (isFullyBooked) {
-    return (
-      <div className="rounded-2xl p-5 border transition-all duration-300" style={{ background: '#f8fafc', borderColor: '#e2e8f0', opacity: 0.75 }}>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#f1f5f9' }}>{group.icon}</div>
-          <div>
-            <span className="text-xs font-black tracking-[0.2em] uppercase block" style={{ color: '#94a3b8' }}>{tr.agesLabel} {group.range}</span>
-            <span className="text-sm font-bold text-slate-400">{group.title}</span>
-          </div>
-        </div>
-        <div className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold" style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          {tr.fullyBooked}
-        </div>
-      </div>
-    )
-  }
-
+function SeatCounter({ group, value, onChange, tr }) {
   return (
     <div className="rounded-2xl p-5 border transition-all duration-300" style={{ background: value > 0 ? group.bg : 'white', borderColor: value > 0 ? group.color + '40' : '#e2e8f0', boxShadow: value > 0 ? '0 4px 20px ' + group.color + '15' : '0 1px 4px rgba(0,0,0,0.05)' }}>
       <div className="flex items-center gap-3 mb-4">
@@ -163,20 +144,7 @@ function RegistrationForm({ tr }) {
   const [children, setChildren] = useState([])
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const [fullyBooked, setFullyBooked] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    fetch('/api/availability')
-      .then((r) => r.json())
-      .then((data) => {
-        setFullyBooked({
-          seats_6_9:   data.seats_6_9?.fullyBooked   ?? false,
-          seats_10_12: data.seats_10_12?.fullyBooked ?? false,
-          seats_12_14: data.seats_12_14?.fullyBooked ?? false,
-        })
-      })
-      .catch(() => {})
-  }, [])
+  const [overCapacity, setOverCapacity] = useState<string[]>([])
   const ref = useRef(null)
   const inView = useInView(ref, { once: true })
   const totalSeats = seats.seats_6_9 + seats.seats_10_12 + seats.seats_12_14
@@ -203,6 +171,8 @@ function RegistrationForm({ tr }) {
     try {
       const res = await fetch('/api/registrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parent_full_name: parent.full_name, parent_email: parent.email, parent_phone: parent.phone, area_of_residence: parent.area, children, ...seats }) })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || tr.errorGeneric) }
+      const d = await res.json()
+      setOverCapacity(d.overCapacity ?? [])
       setStatus('success')
     } catch (err) { setStatus('error'); setError(err.message || tr.errorGeneric) }
   }
@@ -223,15 +193,19 @@ function RegistrationForm({ tr }) {
 
       {status === 'success' ? (
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16">
-          <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }} transition={{ duration: 0.6 }} className="text-7xl mb-6">🎉</motion.div>
-          <h3 className="text-3xl font-black text-slate-800 mb-3">{tr.successTitle}</h3>
-          <p className="text-slate-500 max-w-sm mx-auto mb-2">
-            {tr.lang === 'ar' ? (
-              <>لقد حجزنا <span className="font-bold text-blue-500">{seatWord}</span>: {breakdown}.</>
-            ) : (
-              <>We&apos;ve booked <span className="font-bold text-blue-500">{seatWord}</span>: {breakdown}.</>
-            )}
-          </p>
+          <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }} transition={{ duration: 0.6 }} className="text-7xl mb-6">{overCapacity.length > 0 ? '💙' : '🎉'}</motion.div>
+          <h3 className="text-3xl font-black text-slate-800 mb-4">{overCapacity.length > 0 ? tr.waitlistTitle : tr.successTitle}</h3>
+          {overCapacity.length > 0 ? (
+            <p className="text-slate-500 max-w-md mx-auto leading-relaxed mb-4">{tr.waitlistBody}</p>
+          ) : (
+            <p className="text-slate-500 max-w-sm mx-auto mb-2">
+              {tr.lang === 'ar' ? (
+                <>لقد حجزنا <span className="font-bold text-blue-500">{seatWord}</span>: {breakdown}.</>
+              ) : (
+                <>We&apos;ve booked <span className="font-bold text-blue-500">{seatWord}</span>: {breakdown}.</>
+              )}
+            </p>
+          )}
           <p className="text-slate-400 text-sm">{tr.successContact(parent.email)}</p>
           <p className="text-slate-400 text-xs mt-3">{tr.successQuestion} <a href={'mailto:' + CONTACT.email} className="text-blue-500 hover:underline">{CONTACT.email}</a></p>
         </motion.div>
@@ -251,15 +225,9 @@ function RegistrationForm({ tr }) {
             {divider(tr.divSeats)}
             <p className="text-xs text-slate-400 text-center mb-5">{tr.seatsNote(MAX_SEATS)}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {tr.seatGroups.map((group) => <SeatCounter key={group.key} group={group} value={seats[group.key]} onChange={(n) => setSeats((s) => ({ ...s, [group.key]: n }))} tr={tr} isFullyBooked={fullyBooked[group.key] ?? false} />)}
+              {tr.seatGroups.map((group) => <SeatCounter key={group.key} group={group} value={seats[group.key]} onChange={(n) => setSeats((s) => ({ ...s, [group.key]: n }))} tr={tr} />)}
             </div>
             {totalSeats > 0 && <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm font-bold text-blue-500">{tr.seatsSelected(totalSeats)}</motion.div>}
-            {Object.values(fullyBooked).some(Boolean) && (
-              <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex items-start gap-2.5 rounded-xl p-3.5 text-sm" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}>
-                <svg className="flex-shrink-0 mt-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>{tr.fullyBookedDisclaimer(tr.seatGroups.filter(g => fullyBooked[g.key]).map(g => g.title).join(', '))}</span>
-              </motion.div>
-            )}
           </div>
 
           <AnimatePresence>
